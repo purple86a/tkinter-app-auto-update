@@ -34,12 +34,13 @@ jobs:
 
     - name: Build executable with PyInstaller
       run: |
-        pyinstaller --onefile --windowed --name "MyApp" --add-data "version.txt;." main.py
+        pyinstaller --clean --onefile --windowed --name "MyApp" --add-data 'version.txt;.' main.py
         # Adjust the above command based on your needs:
+        # --clean: Cleans PyInstaller cache
         # --onefile: Single exe file
         # --windowed: No console window (for GUI apps)
         # --name: Name of your exe
-        # --add-data: Bundles version.txt
+        # --add-data: Bundles version.txt (using 'src;dest' syntax)
 
     
     - name: Release
