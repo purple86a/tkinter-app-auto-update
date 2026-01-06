@@ -85,12 +85,26 @@ class AutoUpdater:
             
             batch_script = os.path.join(tempfile.gettempdir(), 'update_script.bat')
             
+            # Get current process ID to wait for it to terminate
+            current_pid = os.getpid()
+            
             with open(batch_script, 'w') as f:
                 f.write('@echo off\n')
-                f.write('timeout /t 3 /nobreak > nul\n')
+                # Wait for the current process to fully terminate
+                f.write(f':waitloop\n')
+                f.write(f'tasklist /FI "PID eq {current_pid}" 2>NUL | find /I "{current_pid}" >NUL\n')
+                f.write(f'if not errorlevel 1 (\n')
+                f.write(f'    timeout /t 1 /nobreak > nul\n')
+                f.write(f'    goto waitloop\n')
+                f.write(f')\n')
+                # Extra wait for _MEI folder cleanup
+                f.write('timeout /t 2 /nobreak > nul\n')
+                # Copy the new exe over the old one
                 f.write(f'copy /y "{installer_path}" "{current_exe}"\n')
                 f.write('timeout /t 1 /nobreak > nul\n')
+                # Start the new exe
                 f.write(f'start "" "{current_exe}"\n')
+                # Clean up
                 f.write(f'del "{installer_path}"\n')
                 f.write(f'del "%~f0"\n')
             
