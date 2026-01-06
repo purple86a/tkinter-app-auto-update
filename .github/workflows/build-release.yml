@@ -8,6 +8,8 @@ on:
 jobs:
   build-and-release:
     runs-on: windows-latest
+    permissions:
+      contents: write  # Required for creating releases
     
     steps:
     - name: Checkout code
@@ -26,7 +28,7 @@ jobs:
     
     - name: Build executable with PyInstaller
       run: |
-        pyinstaller --onefile --windowed --name "app" main.py
+        pyinstaller --onefile --windowed --name "MyApp" main.py
         # Adjust the above command based on your needs:
         # --onefile: Single exe file
         # --windowed: No console window (for GUI apps)
@@ -34,27 +36,10 @@ jobs:
         # --icon: Add --icon=icon.ico if you have an icon
         # main.py: Your main Python file
     
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: dist/MyApp.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref_name }}
-        release_name: Release ${{ github.ref_name }}
-        body: |
-          ## What's Changed
-          - Add your release notes here
-          - You can edit these after the release is created
-        draft: false
-        prerelease: false
-    
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/MyApp.exe  # Path to your built exe
-        asset_name: MyApp.exe  # Name of the file in the release
-        asset_content_type: application/octet-stream
