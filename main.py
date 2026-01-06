@@ -8,13 +8,13 @@ import tempfile
 from packaging import version
 import threading
 
+GITHUB_OWNER = "purple86a"
+GITHUB_REPO = "tkinter-app-auto-update"
 
 class AutoUpdater:
-    def __init__(self, current_version, repo_owner, repo_name):
+    def __init__(self, current_version):
         self.current_version = current_version
-        self.repo_owner = repo_owner
-        self.repo_name = repo_name
-        self.api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/releases/latest"
+        self.api_url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
         
     def check_for_updates(self):
         """Check if a new version is available."""
@@ -97,10 +97,10 @@ class AutoUpdater:
 class UpdateSplashScreen(tk.Toplevel):
     """Splash screen that checks for updates before showing main app."""
     
-    def __init__(self, parent, app_version, repo_owner, repo_name, on_complete_callback):
+    def __init__(self, parent, app_version, on_complete_callback):
         super().__init__(parent)
         
-        self.updater = AutoUpdater(app_version, repo_owner, repo_name)
+        self.updater = AutoUpdater(app_version)
         self.on_complete_callback = on_complete_callback
         self.update_info = None
         
@@ -458,9 +458,6 @@ def main():
         return "0.0.0-dev"  # Default dev version
 
     APP_VERSION = get_version()
-
-    GITHUB_OWNER = "purple86a"  # Your GitHub username
-    GITHUB_REPO = "tkinter-app-auto-update"  # Your repository name
     # =========================================
     
     # Create root window (hidden initially)
@@ -476,8 +473,6 @@ def main():
     splash = UpdateSplashScreen(
         root,
         APP_VERSION,
-        GITHUB_OWNER,
-        GITHUB_REPO,
         show_main_app
     )
     
