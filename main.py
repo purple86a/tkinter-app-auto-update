@@ -83,6 +83,20 @@ class AutoUpdater:
                 # Running as script - for development/testing
                 current_exe = os.path.abspath(sys.argv[0])
             
+            # DEBUG: Write debug info to a log file
+            debug_log = os.path.join(tempfile.gettempdir(), 'update_debug.txt')
+            with open(debug_log, 'w') as f:
+                f.write(f"=== Update Debug Log ===\n")
+                f.write(f"sys.executable: {sys.executable}\n")
+                f.write(f"sys.argv[0]: {sys.argv[0]}\n")
+                f.write(f"sys.frozen: {getattr(sys, 'frozen', False)}\n")
+                f.write(f"sys._MEIPASS: {getattr(sys, '_MEIPASS', 'N/A')}\n")
+                f.write(f"current_exe (used): {current_exe}\n")
+                f.write(f"installer_path: {installer_path}\n")
+                f.write(f"installer exists: {os.path.exists(installer_path)}\n")
+                f.write(f"current_exe exists: {os.path.exists(current_exe)}\n")
+                f.write(f"current PID: {os.getpid()}\n")
+            
             batch_script = os.path.join(tempfile.gettempdir(), 'update_script.bat')
             
             # Get current process ID to wait for it to terminate
@@ -90,6 +104,9 @@ class AutoUpdater:
             
             with open(batch_script, 'w') as f:
                 f.write('@echo off\n')
+                # DEBUG: Log to file what the batch script is doing
+                f.write(f'echo Batch script started >> "{debug_log}"\n')
+                f.write(f'echo Waiting for PID {current_pid} to terminate >> "{debug_log}"\n')
                 # Wait for the current process to fully terminate
                 f.write(f':waitloop\n')
                 f.write(f'tasklist /FI "PID eq {current_pid}" 2>NUL | find /I "{current_pid}" >NUL\n')
@@ -97,16 +114,29 @@ class AutoUpdater:
                 f.write(f'    timeout /t 1 /nobreak > nul\n')
                 f.write(f'    goto waitloop\n')
                 f.write(f')\n')
+                f.write(f'echo Process terminated >> "{debug_log}"\n')
                 # Extra wait for _MEI folder cleanup
                 f.write('timeout /t 2 /nobreak > nul\n')
                 # Copy the new exe over the old one
-                f.write(f'copy /y "{installer_path}" "{current_exe}"\n')
+                f.write(f'echo Copying "{installer_path}" to "{current_exe}" >> "{debug_log}"\n')
+                f.write(f'copy /y "{installer_path}" "{current_exe}" >> "{debug_log}" 2>&1\n')
+                f.write(f'echo Copy result: %errorlevel% >> "{debug_log}"\n')
                 f.write('timeout /t 1 /nobreak > nul\n')
                 # Start the new exe
+                f.write(f'echo Starting "{current_exe}" >> "{debug_log}"\n')
                 f.write(f'start "" "{current_exe}"\n')
                 # Clean up
                 f.write(f'del "{installer_path}"\n')
-                f.write(f'del "%~f0"\n')
+                f.write(f'echo Update complete >> "{debug_log}"\n')
+                # Don't delete batch script so we can inspect it
+                # f.write(f'del "%~f0"\n')
+            
+            # DEBUG: Show message with log location
+            messagebox.showinfo("Debug Info", 
+                f"Debug log: {debug_log}\n\n"
+                f"Batch script: {batch_script}\n\n"
+                f"current_exe: {current_exe}\n\n"
+                f"installer_path: {installer_path}")
             
             subprocess.Popen(['cmd', '/c', batch_script], 
                            creationflags=subprocess.CREATE_NO_WINDOW)
