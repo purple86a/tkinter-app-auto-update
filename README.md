@@ -498,3 +498,4 @@ debug.log
 ---
 
 **You're all set!** Your application now has professional auto-update functionality. Users will always have the latest version with minimal effort.
+
