@@ -11,6 +11,39 @@ import threading
 GITHUB_OWNER = "purple86a"
 GITHUB_REPO = "tkinter-app-auto-update"
 
+def get_real_executable_path():
+    """
+    Get the real executable path, handling cases where the exe 
+    is copied to a temp/scoped directory by Windows.
+    """
+    if not getattr(sys, 'frozen', False):
+        # Running as script
+        return os.path.abspath(sys.argv[0])
+    
+    exe_path = sys.executable
+    
+    # Check if we're running from a temp/scoped directory
+    temp_dir = tempfile.gettempdir().lower()
+    if temp_dir in exe_path.lower() or 'scoped_dir' in exe_path.lower():
+        # Try to find the original exe path from a config file
+        config_path = os.path.join(tempfile.gettempdir(), 'myapp_original_path.txt')
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                original_path = f.read().strip()
+                if os.path.exists(original_path):
+                    return original_path
+        
+        # If no config, we need to ask user or use a default location
+        # For now, return None to indicate we couldn't determine it
+        return None
+    
+    # Save the real path for future use (when app restarts from temp)
+    config_path = os.path.join(tempfile.gettempdir(), 'myapp_original_path.txt')
+    with open(config_path, 'w') as f:
+        f.write(exe_path)
+    
+    return exe_path
+
 class AutoUpdater:
     def __init__(self, current_version):
         self.current_version = current_version
@@ -72,11 +105,13 @@ class AutoUpdater:
             print(f"Error downloading update: {e}")
             return None
     
-    def install_update(self, installer_path):
+    def install_update(self, installer_path, original_exe_path=None):
         """Install the update and restart the application."""
         try:
-            # Get the actual executable path (not the temp extraction folder)
-            if getattr(sys, 'frozen', False):
+            # Use the original exe path if provided, otherwise try to determine it
+            if original_exe_path and os.path.exists(original_exe_path):
+                current_exe = original_exe_path
+            elif getattr(sys, 'frozen', False):
                 # Running as compiled exe (PyInstaller)
                 current_exe = sys.executable
             else:
@@ -91,6 +126,7 @@ class AutoUpdater:
                 f.write(f"sys.argv[0]: {sys.argv[0]}\n")
                 f.write(f"sys.frozen: {getattr(sys, 'frozen', False)}\n")
                 f.write(f"sys._MEIPASS: {getattr(sys, '_MEIPASS', 'N/A')}\n")
+                f.write(f"original_exe_path param: {original_exe_path}\n")
                 f.write(f"current_exe (used): {current_exe}\n")
                 f.write(f"installer_path: {installer_path}\n")
                 f.write(f"installer exists: {os.path.exists(installer_path)}\n")
@@ -150,12 +186,13 @@ class AutoUpdater:
 class UpdateSplashScreen(tk.Toplevel):
     """Splash screen that checks for updates before showing main app."""
     
-    def __init__(self, parent, app_version, on_complete_callback):
+    def __init__(self, parent, app_version, on_complete_callback, original_exe_path=None):
         super().__init__(parent)
         
         self.updater = AutoUpdater(app_version)
         self.on_complete_callback = on_complete_callback
         self.update_info = None
+        self.original_exe_path = original_exe_path
         
         # Window setup
         self.title("Checking for Updates")
@@ -372,7 +409,7 @@ class UpdateSplashScreen(tk.Toplevel):
         """Install the downloaded update."""
         self.title_label.config(text="Installing Update...")
         self.progress_label.config(text="Application will restart shortly...")
-        self.updater.install_update(installer_path)
+        self.updater.install_update(installer_path, self.original_exe_path)
     
     def skip_update(self):
         """Skip update and open main application."""
@@ -511,11 +548,32 @@ def main():
         return "0.0.0-dev"  # Default dev version
 
     APP_VERSION = get_version()
+    
+    # Get the real executable path (before any temp copying happens)
+    ORIGINAL_EXE_PATH = get_real_executable_path()
     # =========================================
     
     # Create root window (hidden initially)
     root = tk.Tk()
     root.withdraw()  # Hide main window until update check is complete
+    
+    # If we couldn't determine the original path, ask the user
+    if ORIGINAL_EXE_PATH is None and getattr(sys, 'frozen', False):
+        from tkinter import filedialog
+        messagebox.showinfo(
+            "First Run Setup",
+            "Please select the location of your application's .exe file.\n\n"
+            "This is needed for the auto-update feature to work correctly."
+        )
+        ORIGINAL_EXE_PATH = filedialog.askopenfilename(
+            title="Select your application's .exe file",
+            filetypes=[("Executable", "*.exe")]
+        )
+        if ORIGINAL_EXE_PATH:
+            # Save it for future use
+            config_path = os.path.join(tempfile.gettempdir(), 'myapp_original_path.txt')
+            with open(config_path, 'w') as f:
+                f.write(ORIGINAL_EXE_PATH)
     
     def show_main_app():
         """Called after update check/installation is complete."""
@@ -526,7 +584,8 @@ def main():
     splash = UpdateSplashScreen(
         root,
         APP_VERSION,
-        show_main_app
+        show_main_app,
+        ORIGINAL_EXE_PATH
     )
     
     root.mainloop()
