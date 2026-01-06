@@ -56,7 +56,7 @@ class AutoUpdater:
             downloaded = 0
             
             temp_dir = tempfile.gettempdir()
-            temp_file = os.path.join(temp_dir, f"update_{self.repo_name}.exe")
+            temp_file = os.path.join(temp_dir, f"update_{GITHUB_REPO}.exe")
             
             with open(temp_file, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
