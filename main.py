@@ -75,14 +75,23 @@ class AutoUpdater:
     def install_update(self, installer_path):
         """Install the update and restart the application."""
         try:
-            current_exe = sys.executable
+            # Get the actual executable path (not the temp extraction folder)
+            if getattr(sys, 'frozen', False):
+                # Running as compiled exe (PyInstaller)
+                current_exe = sys.executable
+            else:
+                # Running as script - for development/testing
+                current_exe = os.path.abspath(sys.argv[0])
+            
             batch_script = os.path.join(tempfile.gettempdir(), 'update_script.bat')
             
             with open(batch_script, 'w') as f:
                 f.write('@echo off\n')
-                f.write('timeout /t 2 /nobreak > nul\n')
-                f.write(f'move /y "{installer_path}" "{current_exe}"\n')
+                f.write('timeout /t 3 /nobreak > nul\n')
+                f.write(f'copy /y "{installer_path}" "{current_exe}"\n')
+                f.write('timeout /t 1 /nobreak > nul\n')
                 f.write(f'start "" "{current_exe}"\n')
+                f.write(f'del "{installer_path}"\n')
                 f.write(f'del "%~f0"\n')
             
             subprocess.Popen(['cmd', '/c', batch_script], 
