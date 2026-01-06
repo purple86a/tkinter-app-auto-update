@@ -444,7 +444,21 @@ class MainApplication:
 
 def main():
     # ============= CONFIGURATION =============
-    APP_VERSION = "1.0.0"  # UPDATE THIS WITH EACH RELEASE
+    def get_version():
+        try:
+            # Check for version.txt in the same directory as the executable/script
+            base_path = sys._MEIPASS if hasattr(sys, '_MEIPASS') else os.path.dirname(os.path.abspath(__file__))
+            version_path = os.path.join(base_path, 'version.txt')
+            
+            if os.path.exists(version_path):
+                with open(version_path, 'r') as f:
+                    return f.read().strip()
+        except Exception:
+            pass
+        return "0.0.0-dev"  # Default dev version
+
+    APP_VERSION = get_version()
+
     GITHUB_OWNER = "purple86a"  # Your GitHub username
     GITHUB_REPO = "tkinter-app-auto-update"  # Your repository name
     # =========================================

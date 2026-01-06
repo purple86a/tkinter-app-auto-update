@@ -26,15 +26,21 @@ jobs:
         pip install pyinstaller requests packaging
         pip install -r requirements.txt  # If you have a requirements.txt
     
+    - name: Extract Version
+      run: |
+        $version = "${{ github.ref_name }}".TrimStart('v')
+        echo $version | Out-File -FilePath version.txt -Encoding ascii -NoNewline
+        Write-Host "Version extracted: $version"
+
     - name: Build executable with PyInstaller
       run: |
-        pyinstaller --onefile --windowed --name "MyApp" main.py
+        pyinstaller --onefile --windowed --name "MyApp" --add-data "version.txt;." main.py
         # Adjust the above command based on your needs:
         # --onefile: Single exe file
         # --windowed: No console window (for GUI apps)
         # --name: Name of your exe
-        # --icon: Add --icon=icon.ico if you have an icon
-        # main.py: Your main Python file
+        # --add-data: Bundles version.txt
+
     
     - name: Release
       uses: softprops/action-gh-release@v1
@@ -43,3 +49,4 @@ jobs:
         files: dist/MyApp.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
