@@ -21,40 +21,14 @@ def get_installed_exe_path():
     """Get the path where the exe should be installed."""
     return os.path.join(get_install_dir(), f"{APP_NAME}.exe")
 
-def ensure_installed():
-    """
-    Ensure the app is running from the correct install location.
-    If not, copy it there and relaunch from the installed location.
-    Returns True if we're in the right place, False if we need to relaunch.
-    """
-    if not getattr(sys, 'frozen', False):
-        # Running as script - skip install check
-        return True
-    
+def is_installed():
+    """Check if the app is running from the fixed install location."""
     install_dir = get_install_dir()
     installed_exe = get_installed_exe_path()
     current_exe = sys.executable
     
     # Check if we're already running from the install location
-    if os.path.normcase(os.path.normpath(current_exe)) == os.path.normcase(os.path.normpath(installed_exe)):
-        return True
-    
-    # We're not in the install location - need to install
-    try:
-        # Create install directory if needed
-        os.makedirs(install_dir, exist_ok=True)
-        
-        # Copy current exe to install location
-        shutil.copy2(current_exe, installed_exe)
-        
-        # Launch from installed location
-        subprocess.Popen([installed_exe])
-        return False  # Signal to exit current instance
-        
-    except Exception as e:
-        # If install fails, just continue running from current location
-        print(f"Could not install to {install_dir}: {e}")
-        return True
+    return os.path.normcase(os.path.normpath(current_exe)) == os.path.normcase(os.path.normpath(installed_exe))
 
 class AutoUpdater:
     def __init__(self, current_version):
@@ -549,7 +523,12 @@ def main():
     def get_version():
         try:
             # Check for version.txt in the same directory as the executable/script
-            base_path = sys._MEIPASS if hasattr(sys, '_MEIPASS') else os.path.dirname(os.path.abspath(__file__))
+            if getattr(sys, 'frozen', False):
+                # Works for both PyInstaller and Nuitka (Nuitka doesn't set sys._MEIPASS by default)
+                base_path = os.path.dirname(sys.executable)
+            else:
+                base_path = os.path.dirname(os.path.abspath(__file__))
+            
             version_path = os.path.join(base_path, 'version.txt')
             
             if os.path.exists(version_path):
@@ -562,10 +541,8 @@ def main():
     APP_VERSION = get_version()
     # =========================================
     
-    # Ensure app is installed to the fixed location
-    # If not, it will copy itself there and relaunch
-    if not ensure_installed():
-        sys.exit(0)  # Exit this instance, new one launched from install location
+    # When using MSI, we don't need manual copying/relaunching.
+    # The installer handles placement.
     
     # Create root window (hidden initially)
     root = tk.Tk()

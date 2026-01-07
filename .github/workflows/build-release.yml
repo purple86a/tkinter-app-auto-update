@@ -19,35 +19,41 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
+        cache: 'pip'
     
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pyinstaller requests packaging
-        pip install -r requirements.txt  # If you have a requirements.txt
+        pip install nuitka requests packaging
+        pip install -r requirements.txt
     
     - name: Extract Version
+      id: extract_version
       run: |
         $version = "${{ github.ref_name }}".TrimStart('v')
-        echo $version | Out-File -FilePath version.txt -Encoding ascii -NoNewline
+        echo "$version" | Out-File -FilePath version.txt -Encoding ascii -NoNewline
+        echo "version=$version" >> $env:GITHUB_OUTPUT
         Write-Host "Version extracted: $version"
 
-    - name: Build executable with PyInstaller
+    - name: Build with Nuitka
       run: |
-        pyinstaller --clean --onefile --windowed --name "MyApp" --add-data 'version.txt;.' main.py
-        # Adjust the above command based on your needs:
-        # --clean: Cleans PyInstaller cache
-        # --onefile: Single exe file
-        # --windowed: No console window (for GUI apps)
-        # --name: Name of your exe
-        # --add-data: Bundles version.txt (using 'src;dest' syntax)
+        python -m nuitka --standalone --windows-disable-console --enable-plugin=tk-inter --output-dir=dist --include-data-file=version.txt=version.txt main.py
+        # Nuitka will output to dist/main.dist/
 
+    - name: Install WiX Toolset
+      run: |
+        dotnet tool install --global wix
+
+    - name: Build MSI with WiX 6.x
+      run: |
+        # Use the version extracted from the tag
+        wix build -arch x64 -d Version=${{ steps.extract_version.outputs.version }} -o dist/MyApp.msi installer.wxs
     
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: dist/MyApp.exe
+        files: dist/MyApp.msi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
