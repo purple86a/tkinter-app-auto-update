@@ -529,9 +529,9 @@ def main():
             
             possible_paths = []
             
-            # 1. Check next to __file__ (works for Nuitka onefile and script mode)
-            if '__file__' in dir():
-                possible_paths.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'version.txt'))
+            # 1. Check next to this script file (works for Nuitka onefile and script mode)
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            possible_paths.append(os.path.join(script_dir, 'version.txt'))
             
             # 2. Check next to executable (works for Nuitka standalone, PyInstaller)
             if getattr(sys, 'frozen', False):
@@ -540,15 +540,6 @@ def main():
             # 3. Check PyInstaller temp folder
             if hasattr(sys, '_MEIPASS'):
                 possible_paths.append(os.path.join(sys._MEIPASS, 'version.txt'))
-            
-            # 4. Nuitka stores the binary directory in __compiled__ module
-            # For onefile, check the temp extraction directory
-            try:
-                import __compiled__
-                # Nuitka onefile extracts to a temp dir - __file__ points there
-                pass  # Already covered by __file__ check above
-            except ImportError:
-                pass
             
             # Try each possible path
             for version_path in possible_paths:
