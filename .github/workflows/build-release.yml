@@ -66,20 +66,51 @@ jobs:
       run: |
         dotnet tool install --global wix
 
-    - name: Harvest files for WiX
+    - name: Generate harvested.wxs with PowerShell
       run: |
-        # Create a wxs file that includes all files from the dist folder
-        # WiX 5/6 uses 'wix heat' differently - we need to use dir harvesting
-        wix extension add WixToolset.Heat.wixext
-        wix heat dir dist -cg HarvestedFiles -dr INSTALLFOLDER -var var.DistDir -ag -sfrag -srd -out harvested.wxs
-        Write-Host "=== Generated harvested.wxs ==="
-        Get-Content harvested.wxs | Select-Object -First 50
+        # Generate WiX fragment for all files in dist folder
+        $files = Get-ChildItem -Path dist -File -Recurse
+        
+        $xml = @"
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <ComponentGroup Id="HarvestedFiles" Directory="INSTALLFOLDER">
+"@
+        
+        $counter = 1
+        foreach ($file in $files) {
+            $relativePath = $file.FullName.Substring((Get-Location).Path.Length + 6)  # +6 for "\dist\"
+            $componentId = "Component_$counter"
+            $fileId = "File_$counter"
+            $guid = [guid]::NewGuid().ToString()
+            
+            $xml += @"
+
+      <Component Id="$componentId" Guid="$guid">
+        <File Id="$fileId" Source="dist\$relativePath" KeyPath="yes" />
+      </Component>
+"@
+            $counter++
+        }
+        
+        $xml += @"
+
+    </ComponentGroup>
+  </Fragment>
+</Wix>
+"@
+        
+        $xml | Out-File -FilePath harvested.wxs -Encoding UTF8
+        Write-Host "=== Generated harvested.wxs with $($files.Count) files ==="
+        Get-Content harvested.wxs | Select-Object -First 30
 
     - name: Build MSI with WiX 6.x
       run: |
         Write-Host "=== Building MSI ==="
         Write-Host "Version: ${{ steps.extract_version.outputs.version }}"
-        wix build -arch x64 -d Version=${{ steps.extract_version.outputs.version }} -d DistDir=dist -o dist/MyApp.msi installer.wxs harvested.wxs
+        wix build -arch x64 -d Version=${{ steps.extract_version.outputs.version }} -o MyApp.msi installer.wxs harvested.wxs
+        Move-Item MyApp.msi dist/MyApp.msi
         Write-Host "=== MSI built successfully ==="
         Get-ChildItem dist/*.msi
     
