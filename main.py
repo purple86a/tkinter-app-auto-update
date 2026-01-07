@@ -13,9 +13,6 @@ GITHUB_OWNER = "purple86a"
 GITHUB_REPO = "tkinter-app-auto-update"
 APP_NAME = "MyApp"  # Change this to your app name
 
-# Check if running as Nuitka compiled executable
-IS_NUITKA = "__compiled__" in dir()
-
 def get_install_dir():
     """Get the fixed install directory for the app."""
     return os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), APP_NAME)
@@ -525,16 +522,11 @@ def main():
     # ============= CONFIGURATION =============
     def get_version():
         try:
-            # For Nuitka standalone, version.txt is in the same folder as the exe
-            # For script mode, it's in the same folder as the .py file
-            if IS_NUITKA or getattr(sys, 'frozen', False):
-                # Nuitka standalone or other frozen: version.txt next to exe
+            # Check for version.txt in the same directory as the executable/script
+            if getattr(sys, 'frozen', False):
+                # Works for both PyInstaller and Nuitka (Nuitka doesn't set sys._MEIPASS by default)
                 base_path = os.path.dirname(sys.executable)
-            elif hasattr(sys, '_MEIPASS'):
-                # PyInstaller onefile
-                base_path = sys._MEIPASS
             else:
-                # Running as script
                 base_path = os.path.dirname(os.path.abspath(__file__))
             
             version_path = os.path.join(base_path, 'version.txt')
@@ -542,8 +534,8 @@ def main():
             if os.path.exists(version_path):
                 with open(version_path, 'r') as f:
                     return f.read().strip()
-        except Exception as e:
-            print(f"Error reading version: {e}")
+        except Exception:
+            pass
         return "0.0.0-dev"  # Default dev version
 
     APP_VERSION = get_version()

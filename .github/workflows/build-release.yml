@@ -45,41 +45,37 @@ jobs:
         echo "version=$version" >> $env:GITHUB_OUTPUT
         Write-Host "Version extracted: $version"
 
-    - name: Build with Nuitka (standalone)
+    - name: Build with Nuitka (onefile)
       run: |
         python -m pip show nuitka
-        # Standalone mode is less likely to trigger AV than onefile
-        # Add metadata to improve AV reputation
-        python -m nuitka --standalone --windows-disable-console --enable-plugin=tk-inter --assume-yes-for-downloads --disable-ccache --output-dir=build --include-data-file=version.txt=version.txt --company-name="YourCompany" --product-name="MyApp" --file-version="${{ steps.extract_version.outputs.version }}" --product-version="${{ steps.extract_version.outputs.version }}" main.py
-        # Nuitka standalone outputs to build/main.dist/
+        python -m nuitka --onefile --windows-disable-console --enable-plugin=tk-inter --assume-yes-for-downloads --disable-ccache --output-dir=build main.py
+        # Nuitka onefile outputs to build/main.exe
         
     - name: Prepare dist folder
       run: |
-        # Copy the entire standalone folder
-        Copy-Item -Path build/main.dist -Destination dist -Recurse
+        New-Item -ItemType Directory -Force -Path dist
+        Copy-Item build/main.exe dist/main.exe
         Write-Host "=== Verifying build outputs ==="
-        Get-ChildItem -Path dist -Recurse | Select-Object -First 20
-        Write-Host "=== Main exe exists ==="
-        Test-Path dist/main.exe
+        Get-ChildItem -Path . -Recurse -Include *.exe | ForEach-Object { Write-Host $_.FullName }
+        Write-Host "=== dist folder contents ==="
+        Get-ChildItem -Path dist
+        Write-Host "=== version.txt contents ==="
+        Get-Content version.txt
 
     - name: Install WiX Toolset
       run: |
         dotnet tool install --global wix
-
-    - name: Harvest files for WiX
-      run: |
-        # Create a wxs file that includes all files from the dist folder
-        # WiX 5/6 uses 'wix heat' differently - we need to use dir harvesting
-        wix extension add WixToolset.Heat.wixext
-        wix heat dir dist -cg HarvestedFiles -dr INSTALLFOLDER -var var.DistDir -ag -sfrag -srd -out harvested.wxs
-        Write-Host "=== Generated harvested.wxs ==="
-        Get-Content harvested.wxs | Select-Object -First 50
+        # Add WiX extensions needed for UI
+        wix extension add WixToolset.UI.wixext
 
     - name: Build MSI with WiX 6.x
       run: |
         Write-Host "=== Building MSI ==="
         Write-Host "Version: ${{ steps.extract_version.outputs.version }}"
-        wix build -arch x64 -d Version=${{ steps.extract_version.outputs.version }} -d DistDir=dist -o dist/MyApp.msi installer.wxs harvested.wxs
+        Write-Host "Checking source files exist:"
+        Test-Path dist/main.exe
+        Test-Path version.txt
+        wix build -arch x64 -d Version=${{ steps.extract_version.outputs.version }} -o dist/MyApp.msi installer.wxs
         Write-Host "=== MSI built successfully ==="
         Get-ChildItem dist/*.msi
     
@@ -87,7 +83,9 @@ jobs:
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: dist/MyApp.msi
+        files: |
+          dist/MyApp.msi
+          dist/main.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
