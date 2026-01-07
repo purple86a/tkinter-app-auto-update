@@ -525,11 +525,16 @@ def main():
     # ============= CONFIGURATION =============
     def get_version():
         try:
-            # Determine base path based on how we're running
-            # Use the global IS_NUITKA flag set at module level
-            if IS_NUITKA or hasattr(sys, '_MEIPASS') or getattr(sys, 'frozen', False):
-                # Nuitka compiled or PyInstaller
-                # For MSI install, version.txt is next to the exe
+            # For Nuitka onefile, data files are extracted to a temp directory
+            # __file__ points to the extracted location when running as onefile
+            if IS_NUITKA:
+                # Nuitka onefile: version.txt is extracted alongside the main module
+                base_path = os.path.dirname(__file__)
+            elif hasattr(sys, '_MEIPASS'):
+                # PyInstaller
+                base_path = sys._MEIPASS
+            elif getattr(sys, 'frozen', False):
+                # Other frozen (e.g., cx_Freeze)
                 base_path = os.path.dirname(sys.executable)
             else:
                 # Running as script
@@ -539,12 +544,6 @@ def main():
             
             if os.path.exists(version_path):
                 with open(version_path, 'r') as f:
-                    return f.read().strip()
-            
-            # Also check in parent directory (for some install layouts)
-            parent_version = os.path.join(os.path.dirname(base_path), 'version.txt')
-            if os.path.exists(parent_version):
-                with open(parent_version, 'r') as f:
                     return f.read().strip()
         except Exception as e:
             print(f"Error reading version: {e}")
