@@ -9,22 +9,23 @@
            Manufacturer="YourCompany" 
            Version="$(var.Version)" 
            UpgradeCode="4f5e6d7c-8b9a-0d1e-2f3a-4b5c6d7e8f9a"
-           Scope="perUser"
+           Scope="perMachine"
+           InstallerVersion="500"
            Language="1033">
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." 
+                  Schedule="afterInstallInitialize" />
 
     <!-- Define the media (CAB file embedded in MSI) -->
     <MediaTemplate EmbedCab="yes" />
 
-    <!-- Define the folder structure -->
-    <StandardDirectory Id="LocalAppDataFolder">
-      <Directory Id="ProgramsFolder" Name="Programs">
-        <Directory Id="INSTALLFOLDER" Name="MyApp" />
-      </Directory>
+    <!-- Install to Program Files\MyApp -->
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="MyApp" />
     </StandardDirectory>
 
-    <StandardDirectory Id="StartMenuFolder">
+    <!-- Start Menu shortcut folder -->
+    <StandardDirectory Id="ProgramMenuFolder">
       <Directory Id="ApplicationProgramsFolder" Name="MyApp" />
     </StandardDirectory>
 
@@ -32,27 +33,33 @@
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
       <!-- The main executable -->
       <Component Id="MainExecutable" Guid="a1b2c3d4-e5f6-7890-abcd-ef1234567890">
-        <File Id="MyAppEXE" Source="dist\main.exe" KeyPath="yes">
-          <Shortcut Id="StartMenuShortcut"
-                    Directory="ApplicationProgramsFolder"
-                    Name="MyApp"
-                    WorkingDirectory="INSTALLFOLDER"
-                    Advertise="yes" />
-        </File>
-        <!-- Install version.txt next to the exe so the app can read it -->
-        <File Id="VersionTxt" Source="version.txt" />
-        <RemoveFolder Id="CleanupShortcut" Directory="ApplicationProgramsFolder" On="uninstall" />
-        <RegistryValue Root="HKCU" Key="Software\YourCompany\MyApp" Name="installed" Type="integer" Value="1" />
+        <File Id="MyAppEXE" Source="dist\main.exe" KeyPath="yes" />
+        <RegistryValue Root="HKLM" Key="Software\YourCompany\MyApp" Name="InstallPath" Type="string" Value="[INSTALLFOLDER]" />
       </Component>
 
-      <!-- The rest of the Nuitka output (if standalone folder) -->
-      <!-- In common scenarios, you might use harvest (heat) but for a simple app we list dependencies if any -->
-      <!-- Since Nuitka creates a .dist folder, we ideally want to include everything in it -->
+      <!-- version.txt for the app to read its version -->
+      <Component Id="VersionFile" Guid="b2c3d4e5-f6a7-8901-bcde-f23456789012">
+        <File Id="VersionTxt" Source="version.txt" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Start Menu Shortcut -->
+    <ComponentGroup Id="ShortcutComponents" Directory="ApplicationProgramsFolder">
+      <Component Id="StartMenuShortcut" Guid="c3d4e5f6-a7b8-9012-cdef-345678901234">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="MyApp"
+                  Description="MyApp Application"
+                  Target="[INSTALLFOLDER]main.exe"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="CleanUpShortcutFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\YourCompany\MyApp" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
     </ComponentGroup>
 
     <!-- Feature definition -->
     <Feature Id="MainFeature" Title="MyApp" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="ShortcutComponents" />
     </Feature>
 
   </Package>
