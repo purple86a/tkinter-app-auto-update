@@ -13,6 +13,9 @@ GITHUB_OWNER = "purple86a"
 GITHUB_REPO = "tkinter-app-auto-update"
 APP_NAME = "MyApp"  # Change this to your app name
 
+# Check if running as Nuitka compiled executable
+IS_NUITKA = "__compiled__" in dir()
+
 def get_install_dir():
     """Get the fixed install directory for the app."""
     return os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), APP_NAME)
@@ -522,11 +525,14 @@ def main():
     # ============= CONFIGURATION =============
     def get_version():
         try:
-            # Check for version.txt in the same directory as the executable/script
-            if getattr(sys, 'frozen', False):
-                # Works for both PyInstaller and Nuitka (Nuitka doesn't set sys._MEIPASS by default)
+            # Determine base path based on how we're running
+            # Use the global IS_NUITKA flag set at module level
+            if IS_NUITKA or hasattr(sys, '_MEIPASS') or getattr(sys, 'frozen', False):
+                # Nuitka compiled or PyInstaller
+                # For MSI install, version.txt is next to the exe
                 base_path = os.path.dirname(sys.executable)
             else:
+                # Running as script
                 base_path = os.path.dirname(os.path.abspath(__file__))
             
             version_path = os.path.join(base_path, 'version.txt')
@@ -534,8 +540,14 @@ def main():
             if os.path.exists(version_path):
                 with open(version_path, 'r') as f:
                     return f.read().strip()
-        except Exception:
-            pass
+            
+            # Also check in parent directory (for some install layouts)
+            parent_version = os.path.join(os.path.dirname(base_path), 'version.txt')
+            if os.path.exists(parent_version):
+                with open(parent_version, 'r') as f:
+                    return f.read().strip()
+        except Exception as e:
+            print(f"Error reading version: {e}")
         return "0.0.0-dev"  # Default dev version
 
     APP_VERSION = get_version()
