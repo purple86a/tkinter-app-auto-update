@@ -525,17 +525,14 @@ def main():
     # ============= CONFIGURATION =============
     def get_version():
         try:
-            # For Nuitka onefile, data files are extracted to a temp directory
-            # __file__ points to the extracted location when running as onefile
-            if IS_NUITKA:
-                # Nuitka onefile: version.txt is extracted alongside the main module
-                base_path = os.path.dirname(__file__)
-            elif hasattr(sys, '_MEIPASS'):
-                # PyInstaller
-                base_path = sys._MEIPASS
-            elif getattr(sys, 'frozen', False):
-                # Other frozen (e.g., cx_Freeze)
+            # For Nuitka standalone, version.txt is in the same folder as the exe
+            # For script mode, it's in the same folder as the .py file
+            if IS_NUITKA or getattr(sys, 'frozen', False):
+                # Nuitka standalone or other frozen: version.txt next to exe
                 base_path = os.path.dirname(sys.executable)
+            elif hasattr(sys, '_MEIPASS'):
+                # PyInstaller onefile
+                base_path = sys._MEIPASS
             else:
                 # Running as script
                 base_path = os.path.dirname(os.path.abspath(__file__))

@@ -3,6 +3,7 @@
   <!-- 
     WiX 6.x Setup for MyApp 
     This file defines the MSI package structure.
+    Files are harvested from the Nuitka standalone output folder.
   -->
   
   <Package Name="MyApp" 
@@ -29,15 +30,6 @@
       <Directory Id="ApplicationProgramsFolder" Name="MyApp" />
     </StandardDirectory>
 
-    <!-- Define the components -->
-    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-      <!-- The main executable (version.txt is embedded inside) -->
-      <Component Id="MainExecutable" Guid="a1b2c3d4-e5f6-7890-abcd-ef1234567890">
-        <File Id="MyAppEXE" Source="dist\main.exe" KeyPath="yes" />
-        <RegistryValue Root="HKLM" Key="Software\YourCompany\MyApp" Name="InstallPath" Type="string" Value="[INSTALLFOLDER]" />
-      </Component>
-    </ComponentGroup>
-
     <!-- Start Menu Shortcut -->
     <ComponentGroup Id="ShortcutComponents" Directory="ApplicationProgramsFolder">
       <Component Id="StartMenuShortcut" Guid="c3d4e5f6-a7b8-9012-cdef-345678901234">
@@ -51,9 +43,9 @@
       </Component>
     </ComponentGroup>
 
-    <!-- Feature definition -->
+    <!-- Feature definition - HarvestedFiles comes from harvested.wxs -->
     <Feature Id="MainFeature" Title="MyApp" Level="1">
-      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="HarvestedFiles" />
       <ComponentGroupRef Id="ShortcutComponents" />
     </Feature>
 
