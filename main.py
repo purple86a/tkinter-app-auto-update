@@ -522,20 +522,42 @@ def main():
     # ============= CONFIGURATION =============
     def get_version():
         try:
-            # Check for version.txt in the same directory as the executable/script
+            # For Nuitka onefile: data files are extracted to temp dir alongside __file__
+            # For Nuitka standalone: files are next to the executable
+            # For PyInstaller: uses sys._MEIPASS
+            # For script: use __file__ directory
+            
+            possible_paths = []
+            
+            # 1. Check next to __file__ (works for Nuitka onefile and script mode)
+            if '__file__' in dir():
+                possible_paths.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'version.txt'))
+            
+            # 2. Check next to executable (works for Nuitka standalone, PyInstaller)
             if getattr(sys, 'frozen', False):
-                # Works for both PyInstaller and Nuitka (Nuitka doesn't set sys._MEIPASS by default)
-                base_path = os.path.dirname(sys.executable)
-            else:
-                base_path = os.path.dirname(os.path.abspath(__file__))
+                possible_paths.append(os.path.join(os.path.dirname(sys.executable), 'version.txt'))
             
-            version_path = os.path.join(base_path, 'version.txt')
+            # 3. Check PyInstaller temp folder
+            if hasattr(sys, '_MEIPASS'):
+                possible_paths.append(os.path.join(sys._MEIPASS, 'version.txt'))
             
-            if os.path.exists(version_path):
-                with open(version_path, 'r') as f:
-                    return f.read().strip()
-        except Exception:
-            pass
+            # 4. Nuitka stores the binary directory in __compiled__ module
+            # For onefile, check the temp extraction directory
+            try:
+                import __compiled__
+                # Nuitka onefile extracts to a temp dir - __file__ points there
+                pass  # Already covered by __file__ check above
+            except ImportError:
+                pass
+            
+            # Try each possible path
+            for version_path in possible_paths:
+                if os.path.exists(version_path):
+                    with open(version_path, 'r') as f:
+                        return f.read().strip()
+                        
+        except Exception as e:
+            print(f"Error reading version: {e}")
         return "0.0.0-dev"  # Default dev version
 
     APP_VERSION = get_version()

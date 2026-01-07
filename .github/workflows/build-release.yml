@@ -48,7 +48,7 @@ jobs:
     - name: Build with Nuitka (onefile)
       run: |
         python -m pip show nuitka
-        python -m nuitka --onefile --windows-disable-console --enable-plugin=tk-inter --assume-yes-for-downloads --disable-ccache --output-dir=build main.py
+        python -m nuitka --onefile --windows-disable-console --enable-plugin=tk-inter --assume-yes-for-downloads --disable-ccache --output-dir=build --include-data-files=version.txt=version.txt main.py
         # Nuitka onefile outputs to build/main.exe
         
     - name: Prepare dist folder
