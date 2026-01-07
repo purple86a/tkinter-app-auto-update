@@ -37,7 +37,7 @@ jobs:
 
     - name: Build with Nuitka
       run: |
-        python -m nuitka --standalone --windows-disable-console --enable-plugin=tk-inter --output-dir=dist --include-data-file=version.txt=version.txt main.py
+        python -m nuitka --standalone --windows-disable-console --enable-plugin=tk-inter --assume-yes-for-downloads --output-dir=dist --include-data-file=version.txt=version.txt main.py
         # Nuitka will output to dist/main.dist/
 
     - name: Install WiX Toolset
