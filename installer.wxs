@@ -86,7 +86,7 @@
                   Return="asyncNoWait" />
     
     <InstallExecuteSequence>
-      <Custom Action="LaunchApplication" After="InstallFinalize">NOT Installed AND NOT REMOVE</Custom>
+      <Custom Action="LaunchApplication" After="InstallFinalize" Condition="NOT Installed AND NOT REMOVE" />
     </InstallExecuteSequence>
 
   </Package>
