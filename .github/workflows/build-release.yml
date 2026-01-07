@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'  # Triggers on version tags like v1.0.0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g. 1.0.0)'
+        required: false
+        default: '0.0.0-manual'
 
 jobs:
   build-and-release:
@@ -30,14 +36,18 @@ jobs:
     - name: Extract Version
       id: extract_version
       run: |
-        $version = "${{ github.ref_name }}".TrimStart('v')
+        if ("${{ github.event_name }}" -eq "workflow_dispatch" -and "${{ github.event.inputs.version }}" -ne "") {
+          $version = "${{ github.event.inputs.version }}".TrimStart('v')
+        } else {
+          $version = "${{ github.ref_name }}".TrimStart('v')
+        }
         echo "$version" | Out-File -FilePath version.txt -Encoding ascii -NoNewline
         echo "version=$version" >> $env:GITHUB_OUTPUT
         Write-Host "Version extracted: $version"
 
     - name: Build with Nuitka
       run: |
-        python -m nuitka --standalone --windows-disable-console --enable-plugin=tk-inter --assume-yes-for-downloads --output-dir=dist --include-data-file=version.txt=version.txt main.py
+        python -m nuitka --standalone --windows-disable-console --enable-plugin=tk-inter --assume-yes-for-downloads --disable-ccache --output-dir=dist --include-data-file=version.txt=version.txt main.py
         # Nuitka will output to dist/main.dist/
 
     - name: Install WiX Toolset
