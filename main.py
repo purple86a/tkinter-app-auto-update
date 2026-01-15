@@ -224,6 +224,11 @@ class UpdateSplashScreen(tk.Toplevel):
         )
         self.notes_text.pack(fill=tk.BOTH, expand=True, padx=20, pady=5)
         
+        # Configure markdown tags
+        self.notes_text.tag_configure("header", font=('Arial', 10, 'bold'), foreground="#333333")
+        self.notes_text.tag_configure("bullet", lmargin1=20, lmargin2=30)
+        self.notes_text.tag_configure("normal", font=('Arial', 9))
+        
         # Buttons (hidden initially)
         self.button_frame = tk.Frame(content_frame, bg='white')
         
@@ -294,7 +299,35 @@ class UpdateSplashScreen(tk.Toplevel):
         # Show release notes
         self.notes_frame.pack(fill=tk.BOTH, expand=True, pady=10)
         self.notes_text.delete('1.0', tk.END)
-        self.notes_text.insert('1.0', self.update_info['release_notes'])
+        
+        # Basic Markdown Rendering
+        raw_notes = self.update_info['release_notes']
+        for line in raw_notes.split('\n'):
+            line = line.strip()
+            if not line:
+                self.notes_text.insert(tk.END, '\n')
+                continue
+                
+            if line.startswith('### '):
+                # Header 3
+                text = line[4:].strip()
+                self.notes_text.insert(tk.END, text + '\n', 'header')
+            elif line.startswith('## '):
+                # Header 2
+                text = line[3:].strip()
+                self.notes_text.insert(tk.END, text + '\n', 'header')
+            elif line.startswith('# '):
+                # Header 1
+                text = line[2:].strip()
+                self.notes_text.insert(tk.END, text + '\n', 'header')
+            elif line.startswith('- '):
+                # Bullet point
+                text = "• " + line[2:].strip()
+                self.notes_text.insert(tk.END, text + '\n', 'bullet')
+            else:
+                # Normal text
+                self.notes_text.insert(tk.END, line + '\n', 'normal')
+        
         self.notes_text.config(state='disabled')
         
         # Show buttons
