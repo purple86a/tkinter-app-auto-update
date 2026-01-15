@@ -16,3 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.10] - 2026-01-15
 ### Changed
 - Switched to PyInstaller-generated executable.
+
+## [1.2.0] - 2026-01-15
+### Fixed
+- Fixed indentation error.
+- Fixed issure with application not closing properly when installer starts. 
