@@ -22,6 +22,16 @@ def get_installed_exe_path():
     """Get the path where the exe should be installed."""
     return os.path.join(get_install_dir(), f"{APP_NAME}.exe")
 
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    
+    return os.path.join(base_path, relative_path)
+
 def is_installed():
     """Check if the app is running from the fixed install location."""
     install_dir = get_install_dir()
@@ -146,6 +156,17 @@ class UpdateSplashScreen(tk.Toplevel):
         self.title("Checking for Updates")
         self.geometry("500x350")
         self.resizable(False, False)
+        
+        # Set icon if available
+        try:
+            icon_path = get_resource_path("app_icon.png")
+            if os.path.exists(icon_path):
+                icon = tk.PhotoImage(file=icon_path)
+                self.iconphoto(False, icon)
+        except Exception:
+            pass
+        
+        # Center window
         
         # Center window
         self.update_idletasks()
@@ -523,6 +544,16 @@ def main():
     
     # Create root window (hidden initially)
     root = tk.Tk()
+    
+    # Set icon for root window (will be inherited)
+    try:
+        icon_path = get_resource_path("app_icon.png")
+        if os.path.exists(icon_path):
+            icon = tk.PhotoImage(file=icon_path)
+            root.iconphoto(True, icon)
+    except Exception:
+        pass
+        
     root.withdraw()  # Hide main window until update check is complete
     
     def show_main_app():

@@ -17,6 +17,10 @@
                   Schedule="afterInstallInitialize"
                   AllowSameVersionUpgrades="yes" />
 
+    <!-- Icon for Add/Remove Programs -->
+    <Icon Id="AppIcon" SourceFile="app_icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+
     <!-- Define the media (CAB file embedded in MSI) -->
     <MediaTemplate EmbedCab="yes" />
 
