@@ -12,6 +12,7 @@ import threading
 GITHUB_OWNER = "purple86a"
 GITHUB_REPO = "tkinter-app-auto-update"
 APP_NAME = "MyApp"  # Change this to your app name
+__version__ = "1.1.7"
 
 def get_install_dir():
     """Get the fixed install directory for the app."""
@@ -520,38 +521,7 @@ class MainApplication:
 
 def main():
     # ============= CONFIGURATION =============
-    def get_version():
-        try:
-            # For Nuitka onefile: data files are extracted to temp dir alongside __file__
-            # For Nuitka standalone: files are next to the executable
-            # For PyInstaller: uses sys._MEIPASS
-            # For script: use __file__ directory
-            
-            possible_paths = []
-            
-            # 1. Check next to this script file (works for Nuitka onefile and script mode)
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            possible_paths.append(os.path.join(script_dir, 'version.txt'))
-            
-            # 2. Check next to executable (works for Nuitka standalone, PyInstaller)
-            if getattr(sys, 'frozen', False):
-                possible_paths.append(os.path.join(os.path.dirname(sys.executable), 'version.txt'))
-            
-            # 3. Check PyInstaller temp folder
-            if hasattr(sys, '_MEIPASS'):
-                possible_paths.append(os.path.join(sys._MEIPASS, 'version.txt'))
-            
-            # Try each possible path
-            for version_path in possible_paths:
-                if os.path.exists(version_path):
-                    with open(version_path, 'r') as f:
-                        return f.read().strip()
-                        
-        except Exception as e:
-            print(f"Error reading version: {e}")
-        return "0.0.0-dev"  # Default dev version
-
-    APP_VERSION = get_version()
+    APP_VERSION = __version__
     # =========================================
     
     # When using MSI, we don't need manual copying/relaunching.
