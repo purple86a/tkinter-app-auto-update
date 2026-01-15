@@ -1,501 +1,384 @@
-# Auto-Updater Setup Guide
+# Tkinter Auto-Update Framework
 
-Complete guide for adding auto-update functionality to your Tkinter application with GitHub releases.
+A **reusable auto-update framework** for Tkinter desktop applications with GitHub releases integration and MSI installer packaging. I implemented this project for fun and to explore many frameworks and tools hence the amount of releases (●'◡'●). Feel free to use it as a starting point for your own projects! You can also reach me by email if you have any suggestions or questions. Happy coding! (/≧▽≦)/
 
-## Overview
+## 🎯 Overview
 
-This auto-updater provides:
-- ✅ Automatic update checking on app startup
-- ✅ Beautiful splash screen with update UI
-- ✅ Download progress tracking
-- ✅ Automatic installation and restart
-- ✅ Works directly with GitHub releases (no complex setup)
-- ✅ Main app stays hidden during updates
+This framework demonstrates enterprise-grade auto-update capabilities that can be easily integrated into any Tkinter application. Users receive seamless, automatic updates through an elegant splash screen interface, with downloads tracked in real-time and installation handled automatically via Windows MSI installers.
 
-## Prerequisites
+### Key Features
 
-- Python 3.7+
-- GitHub repository with Actions enabled
-- PyInstaller for building executables
+- ✅ **Automatic Update Detection** — Checks GitHub releases on startup
+- ✅ **Beautiful Update UI** — Professional splash screen with progress tracking
+- ✅ **MSI Installer Packaging** — Windows Installer with Start Menu & Desktop shortcuts
+- ✅ **GitHub Actions CI/CD** — Automated build pipeline with version management
+- ✅ **Semantic Versioning** — Built-in version bumping with Bump2Version
+- ✅ **Zero-Configuration Updates** — Users get updates with a single click
+- ✅ **Threaded Downloads** — Non-blocking UI during update process
+- ✅ **Production Ready** — Complete with changelog, credits, and documentation
 
-## Step 1: Install Required Dependencies
+## 🛠️ Technology Stack
 
-Add these to your `requirements.txt`:
-```txt
-requests
-packaging
-pyinstaller
-```
+### Core Technologies
+- **Python 3.7+** — Primary language
+- **Tkinter** — GUI framework (no external dependencies)
+- **PyInstaller** — Executable packaging and bundling
+- **Requests** — HTTP client for GitHub API communication
+- **Packaging** — Semantic version comparison
 
-Install them:
-```bash
-pip install requests packaging pyinstaller
-```
+### Build & Deployment
+- **WiX Toolset 6.x** — MSI installer creation
+- **GitHub Actions** — Automated CI/CD pipeline
+- **Bump2Version** — Automated semantic versioning
+- **Pillow** — Icon format conversion (PNG → ICO)
 
-## Step 2: Test with Example Application
+### Infrastructure
+- **GitHub Releases API** — Update distribution platform
+- **Windows Installer XML** — Enterprise-grade installer packaging
+- **Markdown** — Documentation and release notes
 
-Before integrating into your main app, test with the provided example:
+## 🚀 Why This Project is Reusable
 
-1. **Download the complete example** from the "Complete Example Application with Updater" artifact
+This framework is designed from the ground up to be **easily integrated** into any Tkinter application:
 
-2. **Update configuration** at the bottom of the file:
+### 1. **Modular Architecture**
+- Self-contained `AutoUpdater` class handles all update logic
+- Standalone `UpdateSplashScreen` component for UI
+- Clean separation between update framework and demo application
+- Zero dependencies on the sample application code
+
+### 2. **Configuration-Based Design**
+Simply update three variables to integrate into your app:
 ```python
-APP_VERSION = "1.0.0"  # Your current version
-GITHUB_OWNER = "your-github-username"  # Your GitHub username
-GITHUB_REPO = "your-repo-name"  # Your repo name
+GITHUB_OWNER = "your-username"    # Your GitHub username
+GITHUB_REPO = "your-repo-name"    # Your repository name
+APP_NAME = "YourApp"              # Your application name
 ```
 
-3. **Run it** to see how it works:
-```bash
-python main.py
-```
+### 3. **Drop-In Integration**
+The update framework requires **minimal changes** to existing code:
+- Copy two classes (`AutoUpdater` and `UpdateSplashScreen`)
+- Wrap your main window initialization with the update callback
+- Configure your GitHub repository settings
+- Done!
 
-You should see:
-- Update splash screen appears first
-- "Checking for Updates..." message
-- Then either update dialog or main app opens
+### 4. **Customizable Components**
+- Modify splash screen colors, fonts, and layout
+- Adjust update check frequency and behavior
+- Customize MSI installer branding and install paths
+- Extend with logging, notifications, or analytics
 
-## Step 3: Set Up GitHub Actions Workflow
+### 5. **Comprehensive Documentation**
+- Step-by-step integration guide included
+- Troubleshooting section for common issues
+- Complete CI/CD workflow examples
+- Version management best practices
 
-1. **Create the workflow file** in your repository:
-```
-.github/workflows/release.yml
-```
+## 🏆 Production Standards
 
-2. **Copy the workflow** from the "GitHub Release Workflow" artifact
+This project adheres to professional development practices suitable for enterprise deployment:
 
-3. **Customize these values** in the workflow:
-```yaml
-pyinstaller --onefile --windowed --name "MyApp" main.py
-```
-Change:
-- `"MyApp"` → Your desired executable name
-- `main.py` → Your main Python file
-- Add `--icon=icon.ico` if you have an icon
+### Version Management
+- **Semantic Versioning** following [SemVer 2.0.0](https://semver.org/)
+- **Automated Version Bumping** via Bump2Version configuration
+- **Changelog Maintenance** following [Keep a Changelog](https://keepachangelog.com/) format
+- **Git Tag Automation** for release tracking
 
-4. **Update the asset paths**:
-```yaml
-asset_path: ./dist/MyApp.exe  # Match your exe name
-asset_name: MyApp.exe  # Match your exe name
-```
+See [`VERSIONING.md`](VERSIONING.md) for complete version management workflow.
 
-## Step 4: Integrate into Your Application
+### Continuous Integration/Deployment
+- **Automated Builds** triggered by Git tags
+- **Multi-Stage Pipeline** with dependency caching
+- **Artifact Verification** before release
+- **Automatic Release Creation** with extracted changelog notes
+- **Platform-Specific Builds** optimized for Windows x64
 
-### Option A: Copy the Classes
+GitHub Actions workflow: [`.github/workflows/build-release.yml`](.github/workflows/build-release.yml)
 
-Copy these classes from the example into your main application:
-- `AutoUpdater`
-- `UpdateSplashScreen`
+### Code Quality
+- **Type-Safe Version Comparison** using the `packaging` library
+- **Error Handling** with graceful fallbacks
+- **Threading** for non-blocking network operations
+- **Resource Management** with PyInstaller bundle support
+- **Debug Logging** for troubleshooting production issues
 
-### Option B: Create a Separate Module
+### User Experience
+- **Non-Intrusive Updates** with skip option
+- **Progress Feedback** with real-time download tracking
+- **Automatic Restart** after successful installation
+- **Release Notes Display** rendered from Markdown
+- **Professional UI Design** with custom styling
 
-Create `updater.py` with the classes and import them:
+### Installer Quality
+- **MSI Packaging** following Windows Installer standards
+- **Silent Upgrade Support** with downgrade protection
+- **Registry Integration** for proper Windows integration
+- **Shortcut Management** for Start Menu and Desktop
+- **Launch After Install** option for improved UX
+- **Unique Product GUIDs** for version tracking
+
+### Documentation
+- **Comprehensive README** with integration guide
+- **Inline Code Comments** explaining complex logic
+- **Changelog Tracking** for all releases
+- **Credits Attribution** for third-party assets
+- **Versioning Guide** for maintainers
+
+## 📋 Quick Start
+
+### For Users (Installing the Application)
+
+1. Download the latest `MyApp.msi` from [Releases](../../releases)
+2. Run the installer and follow the prompts
+3. Launch the application from Start Menu or Desktop shortcut
+4. Updates will be checked automatically on each launch
+
+### For Developers (Integrating the Framework)
+
+#### **Step 1: Copy the Update Framework**
+
+Copy these classes from `main.py` into your application:
+- `AutoUpdater` (lines 44-141)
+- `UpdateSplashScreen` (lines 144-419)
+- Helper functions: `get_resource_path()`, `get_install_dir()`, `get_installed_exe_path()`
+
+#### **Step 2: Configure Your Application**
+
+Update the configuration constants:
 ```python
-from updater import UpdateSplashScreen
+GITHUB_OWNER = "your-username"
+GITHUB_REPO = "your-repo-name"
+APP_NAME = "YourApp"
+__version__ = "1.0.0"
 ```
 
-### Update Your Main Code
+#### **Step 3: Modify Your Main Entry Point**
 
-Modify your main application entry point:
-
-**Before (typical Tkinter app):**
-```python
-if __name__ == "__main__":
-    root = tk.Tk()
-    MyApp(root)
-    root.mainloop()
-```
-
-**After (with updater):**
+Wrap your existing Tkinter initialization:
 ```python
 def main():
-    APP_VERSION = "1.0.0"
-    GITHUB_OWNER = "your-username"
-    GITHUB_REPO = "your-repo"
-    
     root = tk.Tk()
-    root.withdraw()  # Hide main window initially
+    root.withdraw()  # Hide until update check completes
     
     def show_main_app():
-        root.deiconify()  # Show main window
-        MyApp(root)  # Your application class
+        root.deiconify()
+        YourMainApplicationClass(root)
     
     # Show update splash screen first
-    UpdateSplashScreen(
-        root,
-        APP_VERSION,
-        GITHUB_OWNER,
-        GITHUB_REPO,
-        show_main_app
-    )
-    
+    UpdateSplashScreen(root, __version__, show_main_app)
     root.mainloop()
 
 if __name__ == "__main__":
     main()
 ```
 
-## Step 5: Create Your First Release
+#### **Step 4: Set Up GitHub Actions**
 
-### Build Locally (Optional Test)
+1. Copy `.github/workflows/build-release.yml` to your repository
+2. Copy `installer.wxs` and customize with your app details
+3. Create `.bumpversion.cfg` for version management
+4. Add dependencies to `requirements.txt`
+
+#### **Step 5: Create Your First Release**
 
 ```bash
-pyinstaller --onefile --windowed --name "MyApp" main.py
+# Update CHANGELOG.md with your changes
+# Then bump the version and push
+bumpversion patch  # or minor, or major
+git push --follow-tags
 ```
 
-Your exe will be in `dist/MyApp.exe`
+GitHub Actions will automatically build and create the release!
 
-### Create GitHub Release
-
-1. **Commit your changes**:
-```bash
-git add .
-git commit -m "Add auto-updater functionality"
-git push
-```
-
-2. **Create and push version tag**:
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-3. **GitHub Actions will automatically**:
-   - Build your application
-   - Create a release named "Release v1.0.0"
-   - Upload the exe as a release asset
-
-4. **Check GitHub Actions**:
-   - Go to your repository → "Actions" tab
-   - Watch the workflow run
-   - When complete, go to "Releases" to see your first release
-
-## Step 6: Test the Auto-Updater
-
-1. **Download v1.0.0** exe from GitHub releases
-2. **Run it** - it should check for updates and open normally (no updates available)
-
-3. **Create a new version**:
-   - Update `APP_VERSION = "1.1.0"` in your code
-   - Make some changes to your app
-   - Commit and create tag:
-   ```bash
-   git add .
-   git commit -m "Release v1.1.0 - Added new features"
-   git tag v1.1.0
-   git push origin v1.1.0
-   ```
-
-4. **Run the old v1.0.0** exe again:
-   - Update splash should appear
-   - Should detect v1.1.0 is available
-   - Click "Update Now" to test automatic update
-   - App should download, install, and restart with new version
-
-## Step 7: Future Releases
-
-For each new release, follow this workflow:
-
-1. **Update version** in code:
-```python
-APP_VERSION = "1.2.0"  # Increment version
-```
-
-2. **Make your changes** and test locally
-
-3. **Commit changes**:
-```bash
-git add .
-git commit -m "Release v1.2.0 - Bug fixes and improvements"
-git push
-```
-
-4. **Create and push tag**:
-```bash
-git tag v1.2.0
-git push origin v1.2.0
-```
-
-5. **Edit release notes** (optional but recommended):
-   - Go to GitHub → Releases
-   - Edit the auto-generated release
-   - Add detailed release notes about changes
-
-## Version Numbering
-
-Use semantic versioning (MAJOR.MINOR.PATCH):
-- `v1.0.0` → Initial release
-- `v1.0.1` → Bug fixes
-- `v1.1.0` → New features (backwards compatible)
-- `v2.0.0` → Major changes (breaking changes)
-
-## Troubleshooting
-
-### Update Check Not Working
-
-**Problem**: App doesn't detect updates
-
-**Solutions**:
-- Verify `GITHUB_OWNER` and `GITHUB_REPO` are correct
-- Ensure your repository is **public** (or add authentication for private repos)
-- Check that releases are not set as "Draft"
-- Verify tag format is exactly `vX.Y.Z` (e.g., `v1.0.0`)
-- Check internet connection
-
-**Debug**:
-```python
-# Add this temporarily to see error messages
-import sys
-sys.stdout = open('debug.log', 'w')
-sys.stderr = sys.stdout
-```
-
-### Exe Not Building in GitHub Actions
-
-**Problem**: Workflow fails during build step
-
-**Solutions**:
-- Check the Actions logs for specific error
-- Ensure all dependencies are in `requirements.txt`
-- Verify the PyInstaller command matches your file structure
-- Check that your code doesn't have syntax errors
-
-**Common fixes**:
-```yaml
-# If you have additional data files:
-pyinstaller --onefile --windowed --add-data "data;data" --name "MyApp" main.py
-
-# If you have multiple Python files:
-pyinstaller --onefile --windowed --name "MyApp" main.py --hidden-import=mymodule
-```
-
-### Update Installation Fails
-
-**Problem**: Update downloads but doesn't install
-
-**Solutions**:
-- Run the application as **Administrator**
-- Check Windows antivirus isn't blocking the update
-- Ensure exe names match between versions
-- Check Windows permissions on the installation folder
-
-### Download Progress Not Showing
-
-**Problem**: Progress bar stays at 0%
-
-**Solutions**:
-- Check that the GitHub release has the exe asset attached
-- Verify the exe filename matches exactly (case-sensitive)
-- Check file size isn't 0 bytes in the release
-
-### App Crashes on Startup
-
-**Problem**: App closes immediately after starting
-
-**Solutions**:
-- Run from command line to see error messages:
-```bash
-MyApp.exe
-```
-- Check all dependencies are included by PyInstaller
-- Add missing modules with `--hidden-import`
-
-## Optional Enhancements
-
-### Add Application Icon
-
-1. Create or obtain an `.ico` file
-2. Place it in your project root
-3. Update PyInstaller command:
-```yaml
-pyinstaller --onefile --windowed --icon=icon.ico --name "MyApp" main.py
-```
-
-### Customize Update Dialog
-
-Modify the `UpdateSplashScreen` class to change:
-- Colors: Edit `bg` and `fg` parameters
-- Fonts: Change `font=('Arial', 16, 'bold')`
-- Window size: Modify `geometry("500x350")`
-- Border style: Change or remove `overrideredirect(True)`
-
-### Add Manual Update Check Button
-
-Add a button in your app to manually check for updates:
-
-```python
-def manual_update_check(self):
-    """Manual update check from menu or button"""
-    updater = AutoUpdater(APP_VERSION, GITHUB_OWNER, GITHUB_REPO)
-    update_info = updater.check_for_updates()
-    
-    if update_info is None:
-        messagebox.showerror("Error", "Failed to check for updates.")
-    elif update_info['available']:
-        # Show update dialog
-        UpdateSplashScreen(
-            self.root,
-            APP_VERSION,
-            GITHUB_OWNER,
-            GITHUB_REPO,
-            lambda: None  # No callback needed for manual check
-        )
-    else:
-        messagebox.showinfo("No Updates", "You're running the latest version!")
-
-# Add to menu:
-menu.add_command(label="Check for Updates", command=self.manual_update_check)
-```
-
-### Silent Auto-Updates
-
-For silent updates without user interaction, modify `handle_update_check_result`:
-
-```python
-def handle_update_check_result(self):
-    if self.update_info and self.update_info['available']:
-        # Auto-update without showing dialog
-        self.start_update()
-    else:
-        self.skip_update()
-```
-
-### Update Notifications
-
-Add a system notification when update is available:
-
-```python
-# Windows notification
-from win10toast import ToastNotifier
-toaster = ToastNotifier()
-toaster.show_toast(
-    "Update Available",
-    f"Version {update_info['version']} is ready to install!",
-    duration=10
-)
-```
-
-### Skip Version Feature
-
-Allow users to skip a specific version:
-
-```python
-import json
-
-def save_skipped_version(version):
-    with open('config.json', 'w') as f:
-        json.dump({'skipped_version': version}, f)
-
-def get_skipped_version():
-    try:
-        with open('config.json', 'r') as f:
-            return json.load(f).get('skipped_version')
-    except:
-        return None
-
-# In UpdateSplashScreen, add a "Skip This Version" button
-```
-
-### Beta/Pre-release Channel
-
-Check for pre-releases:
-
-```python
-# In check_for_updates(), use this endpoint instead:
-self.api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/releases"
-
-# Then filter for pre-releases:
-for release in response.json():
-    if release.get('prerelease'):
-        # Process pre-release
-```
-
-### Update Log
-
-Keep a log of updates:
-
-```python
-import datetime
-
-def log_update(from_version, to_version):
-    with open('update_log.txt', 'a') as f:
-        f.write(f"{datetime.datetime.now()}: Updated from {from_version} to {to_version}\n")
-```
-
-## Security Considerations
-
-- ✅ Always verify download integrity (consider adding checksum verification)
-- ✅ Use HTTPS for all GitHub API calls (already implemented)
-- ✅ Don't store GitHub tokens in the application code
-- ✅ Consider code signing your executables for Windows SmartScreen
-- ✅ For private repositories, implement secure authentication
-
-## Best Practices
-
-1. **Always test updates** on a separate machine before releasing
-2. **Write clear release notes** for each version
-3. **Use semantic versioning** consistently
-4. **Keep a changelog** in your repository
-5. **Test the rollback process** (what if update fails?)
-6. **Monitor GitHub Actions** for build failures
-7. **Keep dependencies updated** in requirements.txt
-
-## Support
-
-If you encounter issues:
-
-1. Check the GitHub Actions logs for build errors
-2. Test locally with PyInstaller before creating a release
-3. Verify your GitHub repository settings
-4. Check that releases are public (not draft)
-5. Review the troubleshooting section above
-
-## Example Folder Structure
+## 📁 Project Structure
 
 ```
-your-repo/
+tkinter-app-auto-update/
 ├── .github/
 │   └── workflows/
-│       └── release.yml
-├── main.py                 # Your main application with updater
-├── requirements.txt        # Python dependencies
-├── icon.ico               # Application icon (optional)
-├── README.md              # This file
-└── .gitignore
+│       └── build-release.yml    # CI/CD pipeline
+├── main.py                       # Complete demo application with updater
+├── installer.wxs                 # WiX installer definition
+├── app_icon.png                  # Application icon (source)
+├── requirements.txt              # Python dependencies
+├── .bumpversion.cfg             # Version management configuration
+├── CHANGELOG.md                 # Release history
+├── VERSIONING.md                # Version management guide
+├── CREDITS.md                   # Third-party attributions
+└── README.md                    # This file
 ```
 
-## Sample .gitignore
+## 🔧 Customization Guide
 
-```gitignore
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.Python
-env/
-venv/
+### Branding the Installer
 
-# PyInstaller
-build/
-dist/
-*.spec
+Edit `installer.wxs`:
+```xml
+<Package Name="YourApp" 
+         Manufacturer="YourCompany"
+         ...>
+```
 
-# IDE
-.vscode/
-.idea/
-*.swp
+### Changing Update UI Appearance
 
-# OS
-.DS_Store
-Thumbs.db
+Modify the `UpdateSplashScreen` class:
+```python
+# Colors
+main_frame = tk.Frame(self, bg='#your-color', ...)
 
-# Logs
-*.log
-debug.log
+# Window size
+self.geometry("600x400")  # width x height
+
+# Fonts
+self.title_label = tk.Label(..., font=('YourFont', 18, 'bold'))
+```
+
+### Adjusting Build Output
+
+Update `.github/workflows/build-release.yml`:
+```yaml
+# Change executable name
+pyinstaller ... --name "YourApp" main.py
+
+# Add custom resources
+pyinstaller ... --add-data "resources;resources" ...
+
+# Set custom icon
+pyinstaller ... --icon="your_icon.ico" ...
+```
+
+## 📖 Release Workflow
+
+### Prerequisites
+You need to have done the following:
+- Create a virtual environment and activate it using the following:
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+- Install bump2version using the following:
+```bash
+pip install bump2version
+```
+
+### 1. **Make Changes**
+Update your code and test locally
+
+### 2. **Update Changelog**
+Add your changes to `CHANGELOG.md` under `[Unreleased]`
+
+### 3. **Bump Version**
+```bash
+# For bug fixes (1.0.0 → 1.0.1)
+bumpversion patch
+
+# For new features (1.0.0 → 1.1.0)
+bumpversion minor
+
+# For breaking changes (1.0.0 → 2.0.0)
+bumpversion major
+```
+
+This automatically:
+- Updates `__version__` in `main.py`
+- Creates a git commit
+- Creates a git tag
+
+### 4. **Push to GitHub**
+```bash
+git push --follow-tags
+```
+
+### 5. **Automated Build**
+GitHub Actions will:
+- Build the executable with PyInstaller
+- Create the MSI installer with WiX
+- Extract release notes from CHANGELOG.md
+- Create a GitHub release with the MSI attached
+
+### 6. **User Updates**
+Users running older versions will see the update dialog on their next launch!
+
+## 🧪 Testing Updates Locally
+
+### Build Locally
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Convert icon
+python -c "from PIL import Image; img = Image.open('app_icon.png'); img.save('app_icon.ico')"
+
+# Build with PyInstaller
+pyinstaller --onefile --noconsole --add-data "app_icon.png;." --icon="app_icon.ico" --name "main" main.py
+
+# Build MSI (requires WiX Toolset 6.x)
+wix build -arch x64 -d Version=1.0.0 -o dist/MyApp.msi installer.wxs
+```
+
+### Test Update Flow
+1. Create a test release on GitHub with version `v1.1.0`
+2. Upload a test MSI to the release
+3. Run your local build (version `1.0.0`)
+4. The update dialog should appear automatically
+
+## 🛡️ Security Considerations
+
+- ✅ **HTTPS-Only Communication** with GitHub API
+- ✅ **No Hardcoded Credentials** in source code
+- ✅ **Secure Download** via authenticated GitHub releases
+- ⚠️ **Consider Code Signing** for production deployments to avoid Windows SmartScreen warnings
+- ⚠️ **Checksum Verification** can be added for enhanced security
+
+## 🐛 Troubleshooting
+
+### Update Check Fails
+**Cause:** Network issues or incorrect repository configuration  
+**Solution:** Verify `GITHUB_OWNER` and `GITHUB_REPO` are correct and repository is public
+
+### MSI Build Fails
+**Cause:** Missing WiX Toolset or incorrect version  
+**Solution:** Install WiX 6.x: `dotnet tool install --global wix`
+
+### Icon Not Showing
+**Cause:** Icon not bundled or path incorrect  
+**Solution:** Ensure `--add-data "app_icon.png;."` in PyInstaller command and `get_resource_path()` usage
+
+### Application Won't Start After Update
+**Cause:** Antivirus blocking or permission issues  
+**Solution:** Run as Administrator once, or add exception to antivirus
+
+For more detailed troubleshooting, see the inline comments in `main.py`.
+
+## 🎨 Credits
+
+This project uses third-party assets and open-source software:
+
+- See [`CREDITS.md`](CREDITS.md) for attribution of icons and artwork
+- Built with open-source tools: Python, Tkinter, PyInstaller, WiX Toolset
+- Implemented to expirement and explore current frameworks
+
+## 📄 License
+
+This is a demonstration project. Feel free to use and modify the auto-update framework for your own applications. Please maintain attribution for third-party assets as documented in [`CREDITS.md`](CREDITS.md) if you are going to use the icon of the application in your own application.
+
+## 🤝 Contributing & Versioning
+
+For developers looking to contribute or fork this project:
+
+- **Versioning Guide:** See [`VERSIONING.md`](VERSIONING.md) for version management workflow
+- **Changelog Format:** Follow [Keep a Changelog](https://keepachangelog.com/) guidelines  
+- **Version Scheme:** We use [Semantic Versioning](https://semver.org/)
+
+### Quick Version Bump Reference
+
+```bash
+bumpversion patch   # Bug fixes (1.0.0 → 1.0.1)
+bumpversion minor   # New features (1.0.0 → 1.1.0)
+bumpversion major   # Breaking changes (1.0.0 → 2.0.0)
+git push --follow-tags
 ```
 
 ---
 
-**You're all set!** Your application now has professional auto-update functionality. Users will always have the latest version with minimal effort.
-
+**Made with ❤️ for the Python/Tkinter community** • [Report Issues](../../issues) • [View Releases](../../releases)

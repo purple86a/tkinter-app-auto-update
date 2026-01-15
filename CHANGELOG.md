@@ -21,3 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed indentation error.
 - Fixed issure with application not closing properly when installer starts. 
+
+## [1.2.2] - 2026-01-15
+### Added
+- Added app icon.
+- Added credits to artist of app icon art.
