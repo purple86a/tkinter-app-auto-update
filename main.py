@@ -12,7 +12,7 @@ import threading
 GITHUB_OWNER = "purple86a"
 GITHUB_REPO = "tkinter-app-auto-update"
 APP_NAME = "MyApp"  # Change this to your app name
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 
 def get_install_dir():
     """Get the fixed install directory for the app."""
