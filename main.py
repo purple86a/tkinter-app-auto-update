@@ -60,9 +60,9 @@ class AutoUpdater:
             return None
     
     def _get_exe_download_url(self, release_data):
-        """Extract the .exe download URL from release assets."""
+        """Extract the .msi download URL from release assets."""
         for asset in release_data.get('assets', []):
-            if asset['name'].endswith('.exe'):
+            if asset['name'].endswith('.msi'):
                 return asset['browser_download_url']
         return None
     
@@ -76,7 +76,7 @@ class AutoUpdater:
             downloaded = 0
             
             temp_dir = tempfile.gettempdir()
-            temp_file = os.path.join(temp_dir, f"update_{GITHUB_REPO}.exe")
+            temp_file = os.path.join(temp_dir, f"update_{GITHUB_REPO}.msi")
             
             with open(temp_file, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
@@ -94,75 +94,35 @@ class AutoUpdater:
     
     def install_update(self, installer_path, original_exe_path=None):
         """Install the update and restart the application."""
-        try:
-            # Use the original exe path if provided, otherwise try to determine it
-            if original_exe_path and os.path.exists(original_exe_path):
-                current_exe = original_exe_path
-            elif getattr(sys, 'frozen', False):
-                # Running as compiled exe (PyInstaller)
-                current_exe = sys.executable
-            else:
-                # Running as script - for development/testing
-                current_exe = os.path.abspath(sys.argv[0])
-            
             # DEBUG: Write debug info to a log file
             debug_log = os.path.join(tempfile.gettempdir(), 'update_debug.txt')
             with open(debug_log, 'w') as f:
-                f.write(f"=== Update Debug Log ===\n")
-                f.write(f"sys.executable: {sys.executable}\n")
-                f.write(f"sys.argv[0]: {sys.argv[0]}\n")
-                f.write(f"sys.frozen: {getattr(sys, 'frozen', False)}\n")
-                f.write(f"sys._MEIPASS: {getattr(sys, '_MEIPASS', 'N/A')}\n")
-                f.write(f"original_exe_path param: {original_exe_path}\n")
-                f.write(f"current_exe (used): {current_exe}\n")
+                f.write(f"=== Update Debug Log (MSI Mode) ===\n")
                 f.write(f"installer_path: {installer_path}\n")
                 f.write(f"installer exists: {os.path.exists(installer_path)}\n")
-                f.write(f"current_exe exists: {os.path.exists(current_exe)}\n")
                 f.write(f"current PID: {os.getpid()}\n")
+
+            # Command to run the MSI
+            # /i: install
+            # /passive: show progress bar but no user interaction required (unattended)
+            # /norestart: don't restart computer automatically
+            msi_cmd = f'msiexec /i "{installer_path}" /passive /norestart'
             
-            batch_script = os.path.join(tempfile.gettempdir(), 'update_script.bat')
-            
-            # Get current process ID to wait for it to terminate
-            current_pid = os.getpid()
-            
+            # Create a batch script to run the MSI and exit
+            batch_script = os.path.join(tempfile.gettempdir(), 'run_update.bat')
             with open(batch_script, 'w') as f:
                 f.write('@echo off\n')
-                # DEBUG: Log to file what the batch script is doing
-                f.write(f'echo Batch script started >> "{debug_log}"\n')
-                f.write(f'echo Waiting for PID {current_pid} to terminate >> "{debug_log}"\n')
-                # Wait for the current process to fully terminate
-                f.write(f':waitloop\n')
-                f.write(f'tasklist /FI "PID eq {current_pid}" 2>NUL | find /I "{current_pid}" >NUL\n')
-                f.write(f'if not errorlevel 1 (\n')
-                f.write(f'    timeout /t 1 /nobreak > nul\n')
-                f.write(f'    goto waitloop\n')
-                f.write(f')\n')
-                f.write(f'echo Process terminated >> "{debug_log}"\n')
-                # Extra wait for _MEI folder cleanup
+                f.write(f'echo Starting MSI install >> "{debug_log}"\n')
+                # Wait briefly to ensure the python process closes
                 f.write('timeout /t 2 /nobreak > nul\n')
-                # Copy the new exe over the old one
-                f.write(f'echo Copying "{installer_path}" to "{current_exe}" >> "{debug_log}"\n')
-                f.write(f'copy /y "{installer_path}" "{current_exe}" >> "{debug_log}" 2>&1\n')
-                f.write(f'echo Copy result: %errorlevel% >> "{debug_log}"\n')
-                f.write('timeout /t 1 /nobreak > nul\n')
-                # Start the new exe
-                f.write(f'echo Starting "{current_exe}" >> "{debug_log}"\n')
-                f.write(f'start "" "{current_exe}"\n')
-                # Clean up
-                f.write(f'del "{installer_path}"\n')
-                f.write(f'echo Update complete >> "{debug_log}"\n')
-                # Don't delete batch script so we can inspect it
-                # f.write(f'del "%~f0"\n')
+                f.write(f'{msi_cmd}\n')
+                f.write(f'echo MSI started >> "{debug_log}"\n')
             
-            # DEBUG: Show message with log location
-            messagebox.showinfo("Debug Info", 
-                f"Debug log: {debug_log}\n\n"
-                f"Batch script: {batch_script}\n\n"
-                f"current_exe: {current_exe}\n\n"
-                f"installer_path: {installer_path}")
-            
+            # Start the batch script detached
             subprocess.Popen(['cmd', '/c', batch_script], 
                            creationflags=subprocess.CREATE_NO_WINDOW)
+            
+            # Exit this application immediately so the installer can overwrite files
             sys.exit(0)
             
         except Exception as e:
