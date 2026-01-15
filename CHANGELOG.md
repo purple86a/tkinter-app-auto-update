@@ -12,3 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release with auto-updater functionality.
 - MSI installer setup using WiX.
 - Basic main application window.
+
+## [1.1.10] - 2026-01-15
+### Changed
+- Switched to PyInstaller-generated executable.

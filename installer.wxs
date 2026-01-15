@@ -14,7 +14,8 @@
            Language="1033">
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." 
-                  Schedule="afterInstallInitialize" />
+                  Schedule="afterInstallInitialize"
+                  AllowSameVersionUpgrades="yes" />
 
     <!-- Define the media (CAB file embedded in MSI) -->
     <MediaTemplate EmbedCab="yes" />
