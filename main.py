@@ -94,6 +94,7 @@ class AutoUpdater:
     
     def install_update(self, installer_path, original_exe_path=None):
         """Install the update and restart the application."""
+        try:
             # DEBUG: Write debug info to a log file
             debug_log = os.path.join(tempfile.gettempdir(), 'update_debug.txt')
             with open(debug_log, 'w') as f:
