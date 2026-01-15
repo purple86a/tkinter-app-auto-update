@@ -79,10 +79,47 @@ jobs:
         Write-Host "=== MSI built successfully ==="
         Get-ChildItem dist/*.msi
     
+    - name: Extract Release Notes
+      id: extract_release_notes
+      shell: python
+      env:
+        VERSION: ${{ steps.extract_version.outputs.version }}
+      run: |
+        import re
+        import os
+        
+        version = os.environ.get('VERSION')
+        changelog_file = 'CHANGELOG.md'
+        output_file = 'release_notes.md'
+        
+        try:
+            with open(changelog_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Regex to find the section: ## [1.1.7] ... until next ## [ or end of string
+            pattern = rf"## \[{re.escape(version)}\].*?\n(.*?)(?=\n## \[|\Z)"
+            match = re.search(pattern, content, re.DOTALL)
+            
+            if match:
+                notes = match.group(1).strip()
+                print(f"Found notes for v{version}")
+            else:
+                notes = f"Release v{version}"
+                print(f"No notes found for v{version} in CHANGELOG.md")
+                
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(notes)
+                
+        except Exception as e:
+            print(f"Error extracting notes: {e}")
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(f"Release v{version}")
+
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
+        body_path: release_notes.md
         files: |
           dist/MyApp.msi
           dist/main.exe
